@@ -4,6 +4,37 @@ from torch.nn.utils import weight_norm
 
 #inspiration: https://arxiv.org/pdf/1803.01271.pdf and accomanying source code https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
     
+class ResidualBottleneck1D(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, pad, dropout = 0.2):
+        super(ResidualBottleneck1D, self).__init__()
+        conv0 = nn.utils.weight_norm(nn.Conv1d(in_channels, out_channels//4, kernel_size=1, stride=1))
+        relu0 = nn.ReLU(inplace=True)
+        dropout0 = nn.Dropout(dropout)
+
+        pad = torch.nn.ZeroPad2d((pad, 0))
+        conv1 = nn.utils.weight_norm(nn.Conv1d(out_channels//4, out_channels//4, kernel_size, stride=1, dilation=dilation))
+        relu1 = nn.ReLU(inplace=True)
+        dropout1 = nn.Dropout(dropout)
+
+        conv2 = nn.utils.weight_norm(nn.Conv1d(out_channels//4, out_channels, kernel_size=1, stride=1))
+        relu2 = nn.ReLU(inplace=True)
+        dropout2 = nn.Dropout(dropout)
+
+        self.layers = nn.Sequential(conv0, relu0, dropout0, pad, conv1, relu1, dropout1, conv2, relu2, dropout2)
+
+        self.channel_scaling = None
+        if in_channels != out_channels:
+            self.channel_scaling = nn.utils.weight_norm(nn.Conv1d(in_channels, out_channels, kernel_size=1, stride=1))
+
+
+    def forward(self, x):
+        res = x
+        out = self.layers(x)
+        if self.channel_scaling != None:
+            res = self.channel_scaling(x)
+        return res + out
+        
+
 class ResidualBlock1D(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation, pad, dropout = 0.2):
         super(ResidualBlock1D, self).__init__()
@@ -30,15 +61,25 @@ class ResidualBlock1D(nn.Module):
         if self.channel_scaling != None:
             res = self.channel_scaling(x)
         return res + out
-        
+
+
+    def forward(self, x):
+        res = x
+        out = self.layers(x)
+        if self.channel_scaling != None:
+            res = self.channel_scaling(x)
+        return res + out
+
 
 class TimeSeriesCNN(nn.Module):
-    def __init__(self, n_layers, input_size, n_channels):
+    def __init__(self, n_layers, input_size, n_channels, output_size):
         super(TimeSeriesCNN, self).__init__()
         blocks = []
         for i in range(n_layers):
-            dil = i+1
+            dil = 1 + 3*i
+            #dil = 2**i
             n_prev_channels = n_channels if i != 0 else input_size
+            n_channels = n_channels if i != n_layers-1 else output_size
             blocks += [ResidualBlock1D(n_prev_channels, n_channels, 3, dil, pad=dil*2, dropout=0.2)]
         self.residual_blocks = nn.Sequential(*blocks)
 
@@ -57,5 +98,5 @@ if __name__ == "__main__":
     block = ResidualBlock1D(5, 5, 3, 1, 2)
     print(block(tensor))
 
-    model = TimeSeriesCNN(n_layers = 12, input_size = 5, n_channels = 128)
+    model = TimeSeriesCNN(n_layers = 12, input_size = 5, n_channels = 128, output_size = 10)
     print(model(tensor))
