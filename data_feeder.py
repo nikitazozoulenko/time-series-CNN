@@ -159,4 +159,3 @@ if __name__ == "__main__":
         batch = data_feeder.get_batch()
         i += 1
         print(i)
-    
