@@ -36,24 +36,30 @@ def receptive_field(k, d):
     return d*(k-1)
 
 if __name__ == "__main__":
-    n_layers = 18
-    r = 0
-    for i in range(n_layers-1, -1, -1):
-        dil = 1 + 3*i
-        print(i)
-        #dil = 2**i
-        r += receptive_field(k=3, d=dil)
-        if i != n_layers-1:
-            r -= 1
-    print(r)
+    # n_layers = 18
+    # r = 0
+    # for i in range(n_layers-1, -1, -1):
+    #     dil = 1 + 3*i
+    #     print(i)
+    #     #dil = 2**i
+    #     r += receptive_field(k=3, d=dil)
+    #     if i != n_layers-1:
+    #         r -= 1
+    # print(r)
 
-    n_layers = 18
-    r = 0
-    for i in range(n_layers-1, -1, -1):
-        dil = 1 + 2*i
-        print(i)
-        #dil = 2**i
-        r += 2* receptive_field(k=3, d=dil)
-        if i != n_layers-1:
-            r -= 2
-    print(r)
+    # n_layers = 18
+    # r = 0
+    # for i in range(n_layers-1, -1, -1):
+    #     dil = 1 + 2*i
+    #     print(i)
+    #     #dil = 2**i
+    #     r += 2* receptive_field(k=3, d=dil)
+    #     if i != n_layers-1:
+    #         r -= 2
+    # print(r)
+    n_layers = 8
+    r = 1
+    for i in range(0, n_layers, 1):
+        dil = int(1.8**i)
+        r += receptive_field(k=3, d=dil)
+        print(r)

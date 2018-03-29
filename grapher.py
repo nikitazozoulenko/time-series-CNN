@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+# plt.switch_backend("agg")
+import numpy as np
 
 class Grapher():
     def __init__(self):
@@ -36,11 +38,20 @@ class Grapher():
         for values, indices, color, legenlabel in zip(list_values, list_indices, list_colors, legendlabels):
             plt.plot(indices, values, color, label=legenlabel)
         plt.legend(loc=1)
-        plt.show()
+        # plt.show()
+        plt.savefig(legendlabels[0]+".png")
 
 
 if __name__ == "__main__":
     grapher = Grapher()
-    #values, indices = grapher.textlog2numpy("train_losses.txt")
     values, indices = grapher.textlog2numpy("val_acc.txt")
-    grapher.graph([values], [indices], ["r"], ["Training Loss"], "Loss", "Iterations", list_ewmas = [0.9])
+    values2, indices2 = grapher.textlog2numpy("val_losses.txt")
+    values1, indices1 = grapher.textlog2numpy("train_losses.txt")
+    #grapher.graph([values1,values2], [indices1, indices2], ["r", "g"], [ "Training Loss", "Validation Loss"], "Loss", "Iterations")
+    #grapher.graph([values], [indices], ["b"], ["Validation Accuracy"], "Accuracy", "Iterations")
+
+    values2, indices2 = grapher.textlog2numpy("test_losses.txt")
+    values1, indices1 = grapher.textlog2numpy("test_acc.txt")
+    #grapher.graph([values2], [indices2], ["r"], [ "Test Loss", "Validation Loss"], "Loss", "Iterations")
+    #grapher.graph([values1], [indices1], ["b"], ["Test Accuracy"], "Accuracy", "Iterations")
+    print(np.stack([values1, indices1], axis=1))
