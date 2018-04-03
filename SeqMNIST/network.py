@@ -28,7 +28,7 @@ class ResidualBlock1D(nn.Module):
         x = self.layers[0](x)
         x = self.layers[1](x)
         if self.channel_scaling != None:
-            res = self.channel_scaling(x)
+            res = self.channel_scaling(res)
         return res + x
 
 
@@ -172,6 +172,6 @@ if __name__ == "__main__":
     x = np.arange(1*2*3).reshape(1,2,3)
     tensor = Variable(torch.zeros(100,1,28*28))
     print(tensor)
-    model = TCNRadical(n_layers=6, input_size=1, hidden_size=32, output_size=10, kernel_size=3, 
+    model = TCNSingle(n_layers=6, input_size=1, hidden_size=32, output_size=10, kernel_size=3, 
                         dilation_lambda = lambda l: 1+l*3)
-    print(model(tensor))
+    print(model)
