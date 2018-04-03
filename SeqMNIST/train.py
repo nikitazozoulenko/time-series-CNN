@@ -116,9 +116,9 @@ def main():
                         dilation_lambda = lambda l: int(1+l*1.4)).cuda()
     radical = TCNRadical(n_layers=6, input_size=1, hidden_size=32, output_size=10, kernel_size=6, 
                         dilation_lambda = lambda l: 1+l*3).cuda()
-    optimizer_single = optim.SGD(single.parameters(), lr=0.01, momentum=0.9, weight_decay=0.00001)
-    optimizer_double = optim.SGD(double.parameters(), lr=0.01, momentum=0.9, weight_decay=0.00001)
-    optimizer_radical = optim.SGD(radical.parameters(), lr=0.01, momentum=0.9, weight_decay=0.00001)
+    optimizer_single = optim.SGD(single.parameters(), lr=0.001, momentum=0.9, weight_decay=0.00001)
+    optimizer_double = optim.SGD(double.parameters(), lr=0.001, momentum=0.9, weight_decay=0.00001)
+    optimizer_radical = optim.SGD(radical.parameters(), lr=0.001, momentum=0.9, weight_decay=0.00001)
 
     single_train_loss = Logger("single_train_losses.txt")
     single_val_loss = Logger("single_val_losses.txt")
@@ -143,7 +143,7 @@ def main():
             evaluate_acc(batch_size, single, val_data, i, single_val_loss, single_val_acc, permute)
             evaluate_acc(batch_size, double, val_data, i, double_val_loss, double_val_acc, permute)
             evaluate_acc(batch_size, radical, val_data, i, radical_val_loss, radical_val_acc, permute)
-        if i in [1000]:
+        if i in [200, 1000]:
             increase_lr(optimizer_single)
             increase_lr(optimizer_double)
             increase_lr(optimizer_radical)
