@@ -36,7 +36,7 @@ class TCNSingle(nn.Module):
     def __init__(self, n_layers, input_size, hidden_size, output_size, kernel_size, dilation_lambda = lambda l: 1+l):
         super(TCNSingle, self).__init__()
         blocks = []
-        for l in range(n_layers):
+        for i in range(n_layers):
             dil = dilation_lambda(l)
             c_in = hidden_size if i != 0 else input_size
             c_out = hidden_size if i != n_layers-1 else output_size
