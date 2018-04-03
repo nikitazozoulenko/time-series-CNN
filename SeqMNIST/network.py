@@ -37,7 +37,7 @@ class TCNSingle(nn.Module):
         super(TCNSingle, self).__init__()
         blocks = []
         for i in range(n_layers):
-            dil = dilation_lambda(l)
+            dil = dilation_lambda(i)
             c_in = hidden_size if i != 0 else input_size
             c_out = hidden_size if i != n_layers-1 else output_size
             blocks += [ResidualBlock1D(c_in, hidden_size, c_out, kernel_size, dil, dropout_chance = 0.2)]
