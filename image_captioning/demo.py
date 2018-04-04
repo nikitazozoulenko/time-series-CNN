@@ -52,8 +52,8 @@ def main():
     coco_path = "/hdd/Data/MSCOCO2017/images"
     annFile = "/hdd/Data/MSCOCO2017/annotations"
     lang = Lang()
-    val_data_feeder = DataFeeder(coco_path+"/train2017/",
-                                   annFile+"/captions_train2017.json", 
+    val_data_feeder = DataFeeder(coco_path+"/val2017/",
+                                   annFile+"/captions_val2017.json", 
                                    lang,
                                    preprocess_workers = 1, cuda_workers = 1, 
                                    cpu_size = 5, cuda_size = 2, 
