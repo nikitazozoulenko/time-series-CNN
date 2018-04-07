@@ -55,15 +55,15 @@ def main():
     val_data_feeder.start_queue_threads()
 
     model = ImageAnnotator(n_layers=18, hidden_size=256, lang=lang).cuda()
-    model.load_state_dict(torch.load("savedir/model_01_it700k.pth"))
-    version = "02"
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.00001)
+    model.load_state_dict(torch.load("savedir/model_03_it500k.pth"))
+    version = "04"
+    optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9, weight_decay=0.00001)
     loss = Loss().cuda()
 
     train_logger = Logger("train_losses.txt")
     val_logger = Logger("val_losses.txt")
 
-    for i in range(300001):
+    for i in range(250001):
         images, captions, num_words = train_data_feeder.get_batch()
         batch_loss = calc_loss(model, loss, images, captions, num_words, i, train_logger)
         train(batch_loss, optimizer, images, captions, num_words)
@@ -75,7 +75,7 @@ def main():
             model.train()
         #if i in [500000]:
         #    decrease_lr(optimizer)
-        if i % 100000 == 0:
+        if i % 50000 == 0:
             torch.save(model.state_dict(), "savedir/model_"+version+"_it"+str(i//1000)+"k.pth")
             
     train_data_feeder.kill_queue_threads()
