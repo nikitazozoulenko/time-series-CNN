@@ -18,4 +18,4 @@ if __name__ == "__main__":
         r_l = receptive_field(k=6, d=dil)
         print(dil)
         r += r_l
-    print("total:", r*4-1)
+    print("total:", r*4-3)

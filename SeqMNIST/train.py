@@ -130,10 +130,10 @@ def main():
     radical_val_loss = Logger("radical_val_losses.txt")
     radical_val_acc = Logger("radical_val_acc.txt")
 
-    permute = Variable(torch.from_numpy(np.random.permutation(28*28)).long().cuda(), requires_grad=False)
-    #permute = None
+    #permute = Variable(torch.from_numpy(np.random.permutation(28*28)).long().cuda(), requires_grad=False)
+    permute = None
 
-    for i in range(200001):
+    for i in range(100001):
         images, labels = data_feeder.get_batch()
         train(single, optimizer_single, images, labels, i, single_train_loss, permute)
         train(double, optimizer_double, images, labels, i, double_train_loss, permute)
@@ -143,11 +143,11 @@ def main():
             evaluate_acc(batch_size, single, val_data, i, single_val_loss, single_val_acc, permute)
             evaluate_acc(batch_size, double, val_data, i, double_val_loss, double_val_acc, permute)
             evaluate_acc(batch_size, radical, val_data, i, radical_val_loss, radical_val_acc, permute)
-        if i in [200, 1000]:
+        if i in [200, 500]:
             increase_lr(optimizer_single)
             increase_lr(optimizer_double)
             increase_lr(optimizer_radical)
-        if i in [150000, 180000]:
+        if i in [60000, 90000]:
             decrease_lr(optimizer_single)
             decrease_lr(optimizer_double)
             decrease_lr(optimizer_radical)
