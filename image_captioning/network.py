@@ -203,30 +203,6 @@ class GRUAnnotator(nn.Module):
         return caption
 
 if __name__ == "__main__":
-    # from data_feeder import DataFeeder
-    # coco_path = "/hdd/Data/MSCOCO2017/images"
-    # annFile = "/hdd/Data/MSCOCO2017/annotations"
-    # use_cuda = True
-
-    # lang = Lang()
-    # train_data_feeder = DataFeeder(coco_path+"/train2017/",
-    #                                annFile+"/captions_train2017.json",
-    #                                lang, 
-    #                                preprocess_workers = 4, cuda_workers = 1, 
-    #                                cpu_size = 15, cuda_size = 3, 
-    #                                batch_size = 1, use_cuda = use_cuda, use_jitter = True, volatile = False)
-
-    # train_data_feeder.start_queue_threads()
-
-    # model = ImageAnnotator(n_layers=18, hidden_size=256, lang=lang).cuda()
-    # model.load_state_dict(torch.load("savedir/model_it105k.pth"))
-    # for i in range(5):
-    #     batch = train_data_feeder.get_batch()
-    #     images, captions, num_words = batch
-    #     result = model(images, None, test_time=True)
-    #     print(result)
-
-    # train_data_feeder.kill_queue_threads()
     from data_feeder import DataFeeder
     coco_path = "/hdd/Data/MSCOCO2017/images"
     annFile = "/hdd/Data/MSCOCO2017/annotations"

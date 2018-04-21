@@ -16,7 +16,7 @@ class Grapher():
                 line = line.split(",")
                 values += [float(line[0])]
                 indices += [int(line[1])]
-        return values, indices
+        return np.array(values), np.array(indices)
 
 
     def values2ewma(self, losses, alpha = 0.9):
@@ -41,8 +41,7 @@ class Grapher():
         plt.show()
         #plt.savefig(legendlabels[0]+".png")
 
-
-if __name__ == "__main__":
+def graph_single():
     grapher = Grapher()
 
     values1, indices1 = grapher.textlog2numpy("train_losses.txt")
@@ -55,3 +54,34 @@ if __name__ == "__main__":
                   ["Training Loss", "Validation Loss"],
                   "Loss", "Iterations",
                   list_ewmas = [0.999, 0.999])
+
+
+def graph_all():
+    grapher = Grapher()
+    t_values = []
+    t_indices = []
+    v_values = []
+    v_indices = []
+    offsets = [0, 700000, 1000000, 1500000]
+    for i, folder in enumerate(["700k", "300k", "500k", "250k"]):
+        train, train_ind = grapher.textlog2numpy(folder + "/train_losses.txt")
+        val, val_ind = grapher.textlog2numpy(folder + "/val_losses.txt")
+        t_values += [train]
+        t_indices += [train_ind + offsets[i]]
+        v_values += [val]
+        v_indices += [val_ind + offsets[i]]
+
+    t_values = np.concatenate(t_values, axis=0)
+    t_indices = np.concatenate(t_indices, axis=0)
+    v_values = np.concatenate(v_values, axis=0)
+    v_indices = np.concatenate(v_indices, axis=0)
+
+    grapher.graph([t_values, v_values],
+                  [t_indices, v_indices],
+                  ["b", "g"],
+                  ["TCN Training Loss", "TCN Validation Loss"],
+                  "Loss", "Iterations",
+                  list_ewmas = [0.999, 0.999])
+
+if __name__ == "__main__":
+    graph_all()

@@ -224,5 +224,5 @@ if __name__ == "__main__":
     for i in range(100):
         batch = train_data_feeder.get_batch()
         images, captions, num_words = batch
-        print(num_words)
+        print(images)
     train_data_feeder.kill_queue_threads()
