@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torchvision import datasets, transforms
 
-from network import TimeSeriesCNN, RadicalTimeSeriesCNN, DoubleTimeSeriesCNN
+from network import TCNSingle, TCNDouble, TCNRadical
 from data_feeder import DataFeeder
 from logger import Logger
 
@@ -81,9 +81,12 @@ def main(permute):
     val_data = make_batch(len(val_data), 0, val_data, use_cuda = True, volatile = True)
     test_data = make_batch(len(test_data), 0, test_data, use_cuda = True, volatile = True)
 
-    single = TimeSeriesCNN(n_layers=18, input_size=1, hidden_size=64, output_size=10).cuda()
-    double = DoubleTimeSeriesCNN(n_layers = 18, input_size=1, hidden_size=64, output_size=10).cuda()
-    radical = RadicalTimeSeriesCNN(n_layers=2, input_size=1, hidden_size=64, output_size=10).cuda()
+    single = TCNSingle(n_layers=12, input_size=1, hidden_size=32, output_size=10, kernel_size=6, 
+                        dilation_lambda = lambda l: int(1+l*1.4)).cuda()
+    double = TCNDouble(n_layers=12, input_size=1, hidden_size=32, output_size=10, kernel_size=6, 
+                        dilation_lambda = lambda l: int(1+l*1.4)).cuda()
+    radical = TCNRadical(n_layers=6, input_size=1, hidden_size=32, output_size=10, kernel_size=6, 
+                        dilation_lambda = lambda l: 1+l*3).cuda()
     
     single_test_loss = Logger("single_test_losses.txt")
     single_test_acc = Logger("single_test_acc.txt")

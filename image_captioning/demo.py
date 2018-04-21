@@ -7,13 +7,13 @@ import numpy as np
 import cv2
 
 from data_feeder import DataFeeder
-from network import ImageAnnotator
+from network import ImageAnnotator, GRUAnnotator
 from loss import Loss
-from util_graphing import losses_to_ewma, graph, PredictionPreviewerReturner
+from util_graphing import losses_to_ewma, PredictionPreviewerReturner
 from lang import Lang
 
 
-def loop(out, canvas, model, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda):
+def loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda):
     ctr = 0
     while True:
         for j in range(nY):
@@ -23,7 +23,8 @@ def loop(out, canvas, model, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, h
 
                 #get prediction
                 images, _, _ = val_data_feeder.get_batch()
-                caption = model(images, None, test_time=True)
+                GRUcaption = GRU(images, None, test_time=True)
+                TCNcaption = TCN(images, None, test_time=True)
                 im = ppr(images)
                 im = cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
 
@@ -36,8 +37,10 @@ def loop(out, canvas, model, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, h
                 #DRAW CAPTION
                 off_x = 350
                 font = cv2.FONT_HERSHEY_DUPLEX
-                cv2.putText(canvas,"AI Prediction:",     (x-off_x,90+y), font, 0.7,(255,255,255),1,cv2.LINE_AA)
-                cv2.putText(canvas,caption,              (x-off_x,105+y), font, 0.5,(255,255,255),1,cv2.LINE_AA)
+                cv2.putText(canvas,"TCN Prediction:",     (x-off_x,90+y), font, 0.7,(255,255,255),1,cv2.LINE_AA)
+                cv2.putText(canvas,TCNcaption,            (x-off_x,105+y), font, 0.5,(255,255,255),1,cv2.LINE_AA)
+                cv2.putText(canvas,"GRU Prediction:",     (x-off_x,150+y), font, 0.7,(255,255,255),1,cv2.LINE_AA)
+                cv2.putText(canvas,GRUcaption,            (x-off_x,165+y), font, 0.5,(255,255,255),1,cv2.LINE_AA)
 
                 #show frame
                 for _ in range(skip_frames):
@@ -60,9 +63,13 @@ def main():
                                    batch_size = 1, use_cuda = use_cuda, use_jitter = True, volatile = True)
     val_data_feeder.start_queue_threads()
     ppr = PredictionPreviewerReturner()
-    model = ImageAnnotator(n_layers=18, hidden_size=256, lang=lang).cuda()
-    model.load_state_dict(torch.load("savedir/model_01_it700k.pth"))
-    model.eval()
+    TCN = ImageAnnotator(n_layers=18, hidden_size=256, lang=lang).cuda()
+    TCN.load_state_dict(torch.load("savedir/TCN1750k.pth"))
+    TCN.eval()
+
+    GRU = GRUAnnotator(embedding_size=512, hidden_size=512, n_layers=3, lang=lang).cuda()
+    GRU.load_state_dict(torch.load("savedir/GRU1750k.pth"))
+    GRU.eval()
 
     ww =1536
     hh = 864
@@ -87,7 +94,7 @@ def main():
     for k in range(nX):
         canvas[:,ww//nX*k-b_size:ww//nX*k+b_size,:] = 255
 
-    loop(out, canvas, model, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda)
+    loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda)
     
     cv2.destroyAllWindows()
     val_data_feeder.kill_queue_threads()
