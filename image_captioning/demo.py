@@ -6,14 +6,38 @@ from torch.autograd import Variable
 import numpy as np
 import cv2
 
+from torchvision import datasets, transforms
+
 from data_feeder import DataFeeder
 from network import ImageAnnotator, GRUAnnotator
 from loss import Loss
 from util_graphing import losses_to_ewma, PredictionPreviewerReturner
 from lang import Lang
 
+class DemoImageFeeder():
+    def __init__(self, coco_path, annFile, show_size=500, model_input_size=224, use_cuda = True):
+        self.data = datasets.CocoCaptions(root = coco_path, annFile = annFile)
+        self.n = 0
+        self.show_size = show_size
+        self.use_cuda = use_cuda
+        
+        trfms = [transforms.Resize((224, 224))] 
+        trfms += [transforms.ToTensor()]
+        trfms += [transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+        self.transforms = transforms.Compose(trfms)
 
-def loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda):
+    def get_batch(self):
+        #returns showimage, modelimage
+        image, caption = self.data[self.n]
+        self.n = (self.n + 1) % len(self.data)
+        tensor_im = self.transforms(image).unsqueeze(0)
+        if self.use_cuda:
+            tensor_im = tensor_im.cuda()
+        var_im = Variable(tensor_im, volatile=True)
+        return image.resize((self.show_size, self.show_size)), var_im
+
+
+def loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, feeder, use_cuda):
     ctr = 0
     while True:
         for j in range(nY):
@@ -22,11 +46,10 @@ def loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths
                 canvas[2*b_size+hh//nY*j:hh//nY*(j+1)-b_size, 2*b_size+ww//nX*i:ww//nX*(i+1)-b_size, :] = 0
 
                 #get prediction
-                images, _, _ = val_data_feeder.get_batch()
-                GRUcaption = GRU(images, None, test_time=True)
-                TCNcaption = TCN(images, None, test_time=True)
-                im = ppr(images)
-                im = cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
+                show_image, var_image = feeder.get_batch()
+                GRUcaption = GRU(var_image, None, test_time=True)
+                TCNcaption = TCN(var_image, None, test_time=True)
+                im = cv2.cvtColor(np.asarray(show_image), cv2.COLOR_RGB2BGR)
 
                 #DRAW IMAGE
                 x = widths[i]
@@ -52,16 +75,10 @@ def loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths
 
 def main():
     use_cuda = True
-    coco_path = "/hdd/Data/MSCOCO2017/images"
-    annFile = "/hdd/Data/MSCOCO2017/annotations"
+    coco_path = "/hdd/Data/MSCOCO2017/images/val2017/"
+    annFile = "/hdd/Data/MSCOCO2017/annotations/captions_val2017.json"
+    feeder = DemoImageFeeder(coco_path, annFile, show_size=224, use_cuda=use_cuda)
     lang = Lang()
-    val_data_feeder = DataFeeder(coco_path+"/val2017/",
-                                   annFile+"/captions_val2017.json", 
-                                   lang,
-                                   preprocess_workers = 1, cuda_workers = 1, 
-                                   cpu_size = 5, cuda_size = 2, 
-                                   batch_size = 1, use_cuda = use_cuda, use_jitter = True, volatile = True)
-    val_data_feeder.start_queue_threads()
     ppr = PredictionPreviewerReturner()
     TCN = ImageAnnotator(n_layers=18, hidden_size=256, lang=lang).cuda()
     TCN.load_state_dict(torch.load("savedir/TCN1750k.pth"))
@@ -71,8 +88,8 @@ def main():
     GRU.load_state_dict(torch.load("savedir/GRU1750k.pth"))
     GRU.eval()
 
-    ww =1536
-    hh = 864
+    ww =1920
+    hh = 1080
     nX = 2
     nY = 2
     skip_frames = 40
@@ -94,10 +111,9 @@ def main():
     for k in range(nX):
         canvas[:,ww//nX*k-b_size:ww//nX*k+b_size,:] = 255
 
-    loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, val_data_feeder, use_cuda)
+    loop(out, canvas, TCN, GRU, ppr, skip_frames, ww, hh, nY, nX, b_size, widths, heights, feeder, use_cuda)
     
     cv2.destroyAllWindows()
-    val_data_feeder.kill_queue_threads()
 
 if __name__ == "__main__":
     main()
