@@ -36,9 +36,24 @@ class DemoImageFeeder():
         var_im = Variable(tensor_im, volatile=True)
         return image.resize((self.show_size, self.show_size)), var_im
 
+def reformat_caption(caption):
+    per_row = 20
+    final = []
+    while(len(caption)>0):
+        if len(caption) > per_row:
+            index = caption.rfind(" ", 0, per_row)
+            final += [caption[0:index]+"\n"]
+            caption = caption[index:]
+            if caption[0] == " ":
+                caption = caption[1:]
+        else:
+            final += [caption[:]]
+            caption = ""
+
+    out = "".join(final)
+    return out
+
 if __name__ == "__main__":
-    coco_path = "/hdd/Data/MSCOCO2017/images/val2017/"
-    annFile = "/hdd/Data/MSCOCO2017/annotations/captions_val2017.json"
-    feeder = DemoImageFeeder(coco_path, annFile, show_size=500)
-    im = feeder.get_batch()
-    print(im)
+    string = "A group of cows standing next to each other"
+    string = reformat_caption(string)
+
